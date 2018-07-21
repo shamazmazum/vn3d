@@ -87,30 +87,31 @@ void vn_destroy_generator (struct vn_generator *generator)
     free (generator);
 }
 
-#if LINEAR_INTERPOLATE
-static unsigned int interpolate (unsigned int v1, unsigned int v2, unsigned int x, unsigned int shift)
+static unsigned int interpolate (unsigned int v1, unsigned int v2, unsigned int x)
 {
     long vl1 = v1;
     long vl2 = (long)v2 - (long)v1;
 
-    long r = (vl2 * x) >> shift;
+    long r = (vl2*x) >> 8;
 
     return vl1 + r;
 }
-#else
-static unsigned int interpolate (unsigned int v1, unsigned int v2, unsigned int x, unsigned int shift)
+
+#if LINEAR_INTERPOLATE
+static unsigned int intfn (unsigned int x, unsigned int shift)
 {
-    long vl1 = v1;
-    long vl2 = (long)v2 - (long)v1;
+    return (x << 8) >> shift;
+}
+#else
+static unsigned int intfn (unsigned int x, unsigned int shift)
+{
+    unsigned long tmp = (x * x) << 8;
+    tmp >>= 2*shift;
 
-    long tmp1 = x * x * vl2;
-    tmp1 >>= 2*shift;
+    unsigned long res = (3 << shift) - 2*x;
+    res *= tmp;
+    res >>= shift;
 
-    long tmp2 = (3 << shift) - 2*x;
-    tmp2 *= tmp1;
-    tmp2 >>= shift;
-
-    long res = vl1 + tmp2;
     return res;
 }
 #endif
@@ -124,6 +125,7 @@ static unsigned int value_noise_one_pass_3d (const struct vn_generator *generato
     unsigned int v0, v1, v;
 
     unsigned int diffx, diffy, diffz;
+    unsigned int intx, inty, intz;
 
     unsigned int xshift = generator->width - pass;
     unsigned int yshift = generator->height - pass;
@@ -157,15 +159,19 @@ static unsigned int value_noise_one_pass_3d (const struct vn_generator *generato
     diffy = y & ymask;
     diffz = z & zmask;
 
-    v00 = interpolate (v000, v001, diffx, xshift);
-    v01 = interpolate (v010, v011, diffx, xshift);
-    v10 = interpolate (v100, v101, diffx, xshift);
-    v11 = interpolate (v110, v111, diffx, xshift);
+    intx = intfn (diffx, xshift);
+    inty = intfn (diffy, yshift);
+    intz = intfn (diffz, zshift);
 
-    v0 = interpolate (v00, v01, diffy, yshift);
-    v1 = interpolate (v10, v11, diffy, yshift);
+    v00 = interpolate (v000, v001, intx);
+    v01 = interpolate (v010, v011, intx);
+    v10 = interpolate (v100, v101, intx);
+    v11 = interpolate (v110, v111, intx);
 
-    v = interpolate (v0, v1, diffz, zshift);
+    v0 = interpolate (v00, v01, inty);
+    v1 = interpolate (v10, v11, inty);
+
+    v = interpolate (v0, v1, intz);
 
     return v;
 }
@@ -190,6 +196,7 @@ static unsigned int value_noise_one_pass_2d (const struct vn_generator *generato
     unsigned int v0, v1, v;
 
     unsigned int diffx, diffy;
+    unsigned int intx, inty;
 
     unsigned int xshift = generator->width - pass;
     unsigned int yshift = generator->height - pass;
@@ -208,10 +215,13 @@ static unsigned int value_noise_one_pass_2d (const struct vn_generator *generato
     diffx = x & xmask;
     diffy = y & ymask;
 
-    v0 = interpolate (v00, v01, diffx, xshift);
-    v1 = interpolate (v10, v11, diffx, xshift);
+    intx = intfn (diffx, xshift);
+    inty = intfn (diffy, yshift);
 
-    v = interpolate (v0, v1, diffy, yshift);
+    v0 = interpolate (v00, v01, intx);
+    v1 = interpolate (v10, v11, intx);
+
+    v = interpolate (v0, v1, inty);
 
     return v;
 }
