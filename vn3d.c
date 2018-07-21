@@ -3,6 +3,32 @@
 #include <stdio.h>
 #include "vn3d.h"
 
+static enum vn_errcode vn_errcode;
+const struct error_mapping {
+    enum vn_errcode errcode;
+    const char *errmsg;
+} error_mappings[] = {
+    {TOO_MANY_OCTAVES, "Number of octaves must be equal or less than min (depth, width, height)"},
+    {0, NULL}
+};
+
+static const char* find_error_msg (enum vn_errcode code)
+{
+    const struct error_mapping *ptr = &(error_mappings[0]);
+    while (ptr->errcode != code && ptr->errmsg != NULL) ptr++;
+    return (ptr->errmsg != NULL)? ptr->errmsg: "Unknown error";
+}
+
+enum vn_errcode vn_get_error ()
+{
+    return vn_errcode;
+}
+
+const char* vn_get_error_msg ()
+{
+    return find_error_msg (vn_errcode);
+}
+
 /*----Poor man's RNG--*/
 static unsigned int lolrand (unsigned int x, unsigned int y, unsigned int z, unsigned int seed)
 {
@@ -33,6 +59,14 @@ struct vn_generator {
 struct vn_generator* vn_make_generator (unsigned int octaves, unsigned int width,
                                         unsigned int height, unsigned int depth)
 {
+    /* Sanity checks */
+    if (octaves > width ||
+        octaves > height ||
+        octaves > depth) {
+        vn_errcode = TOO_MANY_OCTAVES;
+        return NULL;
+    }
+
     struct vn_generator *generator = malloc (sizeof (struct vn_generator));
     generator->seeds = malloc (sizeof (unsigned int) * octaves);
     generator->width = width;
@@ -103,6 +137,12 @@ static unsigned int value_noise_one_pass_3d (const struct vn_generator *generato
     unsigned int yidx = y >> yshift;
     unsigned int zidx = z >> zshift;
 
+    /*
+     * NB: Smart compilers like clang will partially apply lolrand function
+     * (e.g. lolrandx = lolrand(x, _)) to reduce amount of calculations. Only
+     * the last shift and multiplication by 0xCC9E2D51 will be calculated all
+     * eight times.
+     */
     v000 = lolrand (xidx,   yidx,   zidx, generator->seeds[pass]);
     v001 = lolrand (xidx+1, yidx,   zidx, generator->seeds[pass]);
     v010 = lolrand (xidx,   yidx+1, zidx, generator->seeds[pass]);

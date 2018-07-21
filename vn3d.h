@@ -10,4 +10,11 @@ unsigned int vn_noise_3d (const struct vn_generator *generator, unsigned int x,
                           unsigned int y, unsigned int z);
 unsigned int vn_noise_2d (const struct vn_generator *generator, unsigned int x, unsigned int y);
 
+enum vn_errcode {
+    TOO_MANY_OCTAVES
+};
+
+enum vn_errcode vn_get_error();
+const char* vn_get_error_msg();
+
 #endif

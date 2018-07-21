@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.6)
 project (vn3d)
 
 set (vn3d_VERSION_MAJOR 0)
-set (vn3d_VERSION_MINOR 1)
+set (vn3d_VERSION_MINOR 2)
 set (vn3d_VERSION ${vn3d_VERSION_MAJOR}.${vn3d_VERSION_MINOR})
 
 set (CMAKE_C_FLAGS_RELEASE "-O3 -march=native")
