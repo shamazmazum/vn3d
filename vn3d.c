@@ -66,17 +66,17 @@ static unsigned int interpolate (unsigned int v1, unsigned int v2, unsigned int 
 #else
 static unsigned int interpolate (unsigned int v1, unsigned int v2, unsigned int x, unsigned int shift)
 {
-    unsigned long vl1 = v1;
-    unsigned long vl2 = labs ((long)v2 - (long)v1);
+    long vl1 = v1;
+    long vl2 = (long)v2 - (long)v1;
 
-    unsigned long tmp1 = x * x * vl2;
+    long tmp1 = x * x * vl2;
     tmp1 >>= 2*shift;
 
-    unsigned long tmp2 = (3 << shift) - 2*x;
+    long tmp2 = (3 << shift) - 2*x;
     tmp2 *= tmp1;
     tmp2 >>= shift;
 
-    unsigned long res = (v2 > v1)? (vl1 + tmp2): (vl1 - tmp2);
+    long res = vl1 + tmp2;
     return res;
 }
 #endif
