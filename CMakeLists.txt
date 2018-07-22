@@ -9,16 +9,9 @@ set (vn3d_VERSION ${vn3d_VERSION_MAJOR}.${vn3d_VERSION_MINOR})
 set (CMAKE_C_FLAGS_RELEASE "-O3 -march=native")
 
 option (LINEAR_INTERPOLATION "Faster linear interpolation" OFF)
-if (LINEAR_INTERPOLATION)
-  add_definitions (-DLINEAR_INTERPOLATE)
-endif (LINEAR_INTERPOLATION)
+add_subdirectory (src)
 
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/vn3d.ld.in ${CMAKE_CURRENT_BINARY_DIR}/vn3d.ld)
-add_library (vn3d SHARED vn3d.c)
-set_target_properties (vn3d PROPERTIES VERSION ${vn3d_VERSION}
-  SOVERSION ${vn3d_VERSION_MAJOR}
-  LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/vn3d.ld
-  LINK_FLAGS "-Wl,--version-script ${CMAKE_CURRENT_BINARY_DIR}/vn3d.ld ${ADDITIONAL_LINK_FLAGS}")
-
-install (TARGETS vn3d LIBRARY DESTINATION lib)
-install (FILES vn3d.h DESTINATION include/vn3d)
+find_package (Doxygen)
+if (DOXYGEN_FOUND)
+  add_subdirectory (doc)
+endif (DOXYGEN_FOUND)

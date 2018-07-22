@@ -8,6 +8,7 @@ const struct error_mapping {
     enum vn_errcode errcode;
     const char *errmsg;
 } error_mappings[] = {
+    {ALL_OK, "No errors occured"},
     {TOO_MANY_OCTAVES, "Number of octaves must be equal or less than min (depth, width, height)"},
     {0, NULL}
 };
@@ -59,24 +60,27 @@ struct vn_generator {
 struct vn_generator* vn_make_generator (unsigned int octaves, unsigned int width,
                                         unsigned int height, unsigned int depth)
 {
+    struct vn_generator *generator;
+
     /* Sanity checks */
     if (octaves > width ||
         octaves > height ||
         octaves > depth) {
         vn_errcode = TOO_MANY_OCTAVES;
-        return NULL;
+        generator = NULL;
+    } else {
+        vn_errcode = ALL_OK;
+        generator = malloc (sizeof (struct vn_generator));
+        generator->seeds = malloc (sizeof (unsigned int) * octaves);
+        generator->width = width;
+        generator->height = height;
+        generator->depth = depth;
+        generator->octaves = octaves;
+
+        int i;
+        for (i=0; i<octaves; i++)
+            generator->seeds[i] = rand();
     }
-
-    struct vn_generator *generator = malloc (sizeof (struct vn_generator));
-    generator->seeds = malloc (sizeof (unsigned int) * octaves);
-    generator->width = width;
-    generator->height = height;
-    generator->depth = depth;
-    generator->octaves = octaves;
-
-    int i;
-    for (i=0; i<octaves; i++)
-        generator->seeds[i] = rand();
 
     return generator;
 }
@@ -139,21 +143,23 @@ static unsigned int value_noise_one_pass_3d (const struct vn_generator *generato
     unsigned int yidx = y >> yshift;
     unsigned int zidx = z >> zshift;
 
+    unsigned int seed = generator->seeds[pass];
+
     /*
      * NB: Smart compilers like clang will partially apply lolrand function
      * (e.g. lolrandx = lolrand(x, _)) to reduce amount of calculations. Only
      * the last shift and multiplication by 0xCC9E2D51 will be calculated all
      * eight times.
      */
-    v000 = lolrand (xidx,   yidx,   zidx, generator->seeds[pass]);
-    v001 = lolrand (xidx+1, yidx,   zidx, generator->seeds[pass]);
-    v010 = lolrand (xidx,   yidx+1, zidx, generator->seeds[pass]);
-    v011 = lolrand (xidx+1, yidx+1, zidx, generator->seeds[pass]);
+    v000 = lolrand (xidx,   yidx,   zidx, seed);
+    v001 = lolrand (xidx+1, yidx,   zidx, seed);
+    v010 = lolrand (xidx,   yidx+1, zidx, seed);
+    v011 = lolrand (xidx+1, yidx+1, zidx, seed);
 
-    v100 = lolrand (xidx,   yidx,   zidx+1, generator->seeds[pass]);
-    v101 = lolrand (xidx+1, yidx,   zidx+1, generator->seeds[pass]);
-    v110 = lolrand (xidx,   yidx+1, zidx+1, generator->seeds[pass]);
-    v111 = lolrand (xidx+1, yidx+1, zidx+1, generator->seeds[pass]);
+    v100 = lolrand (xidx,   yidx,   zidx+1, seed);
+    v101 = lolrand (xidx+1, yidx,   zidx+1, seed);
+    v110 = lolrand (xidx,   yidx+1, zidx+1, seed);
+    v111 = lolrand (xidx+1, yidx+1, zidx+1, seed);
 
     diffx = x & xmask;
     diffy = y & ymask;
@@ -207,10 +213,17 @@ static unsigned int value_noise_one_pass_2d (const struct vn_generator *generato
     unsigned int xidx = x >> xshift;
     unsigned int yidx = y >> yshift;
 
-    v00 = lolrand (xidx,   yidx,   0, generator->seeds[pass]);
-    v01 = lolrand (xidx+1, yidx,   0, generator->seeds[pass]);
-    v10 = lolrand (xidx,   yidx+1, 0, generator->seeds[pass]);
-    v11 = lolrand (xidx+1, yidx+1, 0, generator->seeds[pass]);
+    unsigned int seed = generator->seeds[pass];
+
+    /*
+     * Again, clang optimizes these calls to lolrand a lot. For example, the
+     * last multiplication 0xB2D05E13 is eliminated.
+     */
+
+    v00 = lolrand (xidx,   yidx,   0, seed);
+    v01 = lolrand (xidx+1, yidx,   0, seed);
+    v10 = lolrand (xidx,   yidx+1, 0, seed);
+    v11 = lolrand (xidx+1, yidx+1, 0, seed);
 
     diffx = x & xmask;
     diffy = y & ymask;
