@@ -1,66 +1,24 @@
 #include <stdlib.h>
 #include <math.h>
-#include <stdio.h>
-#include "vn3d.h"
+#include "value.h"
+#include "private.h"
 
-static enum vn_errcode vn_errcode;
-const struct error_mapping {
-    enum vn_errcode errcode;
-    const char *errmsg;
-} error_mappings[] = {
-    {ALL_OK, "No errors occured"},
-    {TOO_MANY_OCTAVES, "Number of octaves must be equal or less than min (depth, width, height)"},
-    {0, NULL}
-};
-
-static const char* find_error_msg (enum vn_errcode code)
-{
-    const struct error_mapping *ptr = &(error_mappings[0]);
-    while (ptr->errcode != code && ptr->errmsg != NULL) ptr++;
-    return (ptr->errmsg != NULL)? ptr->errmsg: "Unknown error";
-}
-
-enum vn_errcode vn_get_error ()
-{
-    return vn_errcode;
-}
-
-const char* vn_get_error_msg ()
-{
-    return find_error_msg (vn_errcode);
-}
-
-/*----Poor man's RNG--*/
-static unsigned int lolrand (unsigned int x, unsigned int y, unsigned int z, unsigned int seed)
-{
-    unsigned int r1, r2, r3, r;
-
-    r1 = x ^ (x >> 1);
-    r2 = y ^ (y >> 1);
-    r3 = z ^ (z >> 1);
-
-    r1 *= 0x1B873593;
-    r2 *= 0x19088711;
-    r3 *= 0xB2D05E13;
-
-    r = seed + r1 + r2 + r3;
-    r ^= r >> 5;
-    r *= 0xCC9E2D51;
-
-    return r;
-}
-/*--------------------*/
-
-struct vn_generator {
+struct vn_value_generator {
+    VN_GENERATOR_METHODS
     unsigned int *seeds;
     unsigned int width, height, depth;
     unsigned int octaves;
 };
 
-struct vn_generator* vn_make_generator (unsigned int octaves, unsigned int width,
-                                        unsigned int height, unsigned int depth)
+static void destroy_generator (struct vn_generator *gen);
+static unsigned int noise_3d (const struct vn_generator *gen,
+                              unsigned int x, unsigned int y, unsigned int z);
+static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
+
+struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int width,
+                                         unsigned int height, unsigned int depth)
 {
-    struct vn_generator *generator;
+    struct vn_value_generator *generator;
 
     /* Sanity checks */
     if (octaves > width ||
@@ -76,17 +34,22 @@ struct vn_generator* vn_make_generator (unsigned int octaves, unsigned int width
         generator->height = height;
         generator->depth = depth;
         generator->octaves = octaves;
+        generator->destroy_generator = destroy_generator;
+        generator->noise_2d = noise_2d;
+        generator->noise_3d = noise_3d;
 
         int i;
         for (i=0; i<octaves; i++)
             generator->seeds[i] = rand();
     }
 
-    return generator;
+    return (struct vn_generator*)generator;
 }
 
-void vn_destroy_generator (struct vn_generator *generator)
+
+static void destroy_generator (struct vn_generator *gen)
 {
+    struct vn_value_generator *generator = (struct vn_value_generator*)gen;
     free (generator->seeds);
     free (generator);
 }
@@ -120,7 +83,28 @@ static unsigned int intfn (unsigned int x, unsigned int shift)
 }
 #endif
 
-static unsigned int value_noise_one_pass_3d (const struct vn_generator *generator, unsigned int x,
+/*----Poor man's RNG--*/
+static unsigned int lolrand (unsigned int x, unsigned int y, unsigned int z, unsigned int seed)
+{
+    unsigned int r1, r2, r3, r;
+
+    r1 = x ^ (x >> 1);
+    r2 = y ^ (y >> 1);
+    r3 = z ^ (z >> 1);
+
+    r1 *= 0x1B873593;
+    r2 *= 0x19088711;
+    r3 *= 0xB2D05E13;
+
+    r = seed + r1 + r2 + r3;
+    r ^= r >> 5;
+    r *= 0xCC9E2D51;
+
+    return r;
+}
+/*--------------------*/
+
+static unsigned int value_noise_one_pass_3d (const struct vn_value_generator *generator, unsigned int x,
                                              unsigned int y, unsigned int z, unsigned int pass)
 {
     unsigned int v000, v001, v010, v011;
@@ -182,9 +166,11 @@ static unsigned int value_noise_one_pass_3d (const struct vn_generator *generato
     return v;
 }
 
-unsigned int vn_noise_3d (const struct vn_generator *generator,
-                          unsigned int x, unsigned int y, unsigned int z)
+static unsigned int noise_3d (const struct vn_generator *gen,
+                              unsigned int x, unsigned int y, unsigned int z)
 {
+    const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
+
     int i;
     unsigned long res = 0;
 
@@ -194,7 +180,7 @@ unsigned int vn_noise_3d (const struct vn_generator *generator,
     return res / generator->octaves;
 }
 
-static unsigned int value_noise_one_pass_2d (const struct vn_generator *generator,
+static unsigned int value_noise_one_pass_2d (const struct vn_value_generator *generator,
                                              unsigned int x, unsigned int y,
                                              unsigned int pass)
 {
@@ -239,8 +225,10 @@ static unsigned int value_noise_one_pass_2d (const struct vn_generator *generato
     return v;
 }
 
-unsigned int vn_noise_2d (const struct vn_generator *generator, unsigned int x, unsigned int y)
+static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y)
 {
+    const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
+
     int i;
     unsigned long res = 0;
 

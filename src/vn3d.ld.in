@@ -1,5 +1,5 @@
 VN3D_@vn3d_VERSION@ {
-    global: vn_make_generator;
+    global: vn_value_generator;
             vn_destroy_generator;
             vn_noise_3d;
             vn_noise_2d;
