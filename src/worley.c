@@ -10,6 +10,8 @@ struct vn_worley_generator {
     unsigned int width, height, depth;
 };
 
+#define WORLEY_MAX ((1<<20) - 1)
+
 static void destroy_generator (struct vn_generator *gen);
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
 static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, unsigned int y, unsigned int z);
@@ -75,8 +77,8 @@ static unsigned int check_square (const struct vn_worley_generator *generator,
     for (i=0; i<ndots; i++) {
         // Get 8-bit fixed point dot coordinates
         rnd = xorshift32 (rnd);
-        unsigned int dotx = rnd & 0xff;
-        unsigned int doty = (rnd >> 8) & 0xff;
+        unsigned int dotx = rnd & 0x3ff;
+        unsigned int doty = (rnd >> 10) & 0x3ff;
         int x = dotx - dx;
         int y = doty - dy;
         unsigned int dist = x*x + y*y;
@@ -109,20 +111,20 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
     unsigned int ymask = (1 << height) - 1;
 
     unsigned int xdiff = x & xmask;
-    xdiff <<= 8;
+    xdiff <<= 10;
     xdiff >>= width;
 
     unsigned int ydiff = y & ymask;
-    ydiff <<= 8;
+    ydiff <<= 10;
     ydiff >>= height;
 
     unsigned int closest_dist = check_square (generator, xidx, yidx, xdiff, ydiff);
 
     int xa, xs, ya, ys;
-    xa = xdiff - (1<<8);
-    ya = ydiff - (1<<8);
-    xs = xdiff + (1<<8);
-    ys = ydiff + (1<<8);
+    xa = xdiff - (1<<10);
+    ya = ydiff - (1<<10);
+    xs = xdiff + (1<<10);
+    ys = ydiff + (1<<10);
 
     unsigned int xsq, ysq, xopsq, yopsq;
     xsq = xdiff*xdiff;
@@ -140,8 +142,10 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
     maybe_check_square (xsq + yopsq,   xidx - 1, yidx + 1, xs, ya);
     maybe_check_square (xopsq + ysq,   xidx + 1, yidx - 1, xa, ys);
     maybe_check_square (xopsq + yopsq, xidx + 1, yidx + 1, xa, ya);
-    
-    return closest_dist;
+
+    // Clip value if necessary and promote to 32-bit range
+    closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
+    return closest_dist << 12;
 }
 
 static unsigned int check_cube (const struct vn_worley_generator *generator,
@@ -156,9 +160,9 @@ static unsigned int check_cube (const struct vn_worley_generator *generator,
     for (i=0; i<ndots; i++) {
         // Get 8-bit fixed point dot coordinates
         rnd = xorshift32 (rnd);
-        unsigned int dotx = rnd & 0xff;
-        unsigned int doty = (rnd >> 8) & 0xff;
-        unsigned int dotz = (rnd >> 16) & 0xff;
+        unsigned int dotx = rnd & 0x3ff;
+        unsigned int doty = (rnd >> 10) & 0x3ff;
+        unsigned int dotz = (rnd >> 20) & 0x3ff;
         int x = dotx - dx;
         int y = doty - dy;
         int z = dotz - dz;
@@ -194,26 +198,26 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
     unsigned int zmask = (1 << depth) - 1;
 
     unsigned int xdiff = x & xmask;
-    xdiff <<= 8;
+    xdiff <<= 10;
     xdiff >>= width;
 
     unsigned int ydiff = y & ymask;
-    ydiff <<= 8;
+    ydiff <<= 10;
     ydiff >>= height;
 
     unsigned int zdiff = z & zmask;
-    zdiff <<= 8;
+    zdiff <<= 10;
     zdiff >>= depth;
 
     unsigned int closest_dist = check_cube (generator, xidx, yidx, zidx, xdiff, ydiff, zdiff);
 
     int xa, xs, ya, ys, za, zs;
-    xa = xdiff - (1<<8);
-    ya = ydiff - (1<<8);
-    za = zdiff - (1<<8);
-    xs = xdiff + (1<<8);
-    ys = ydiff + (1<<8);
-    zs = zdiff + (1<<8);
+    xa = xdiff - (1<<10);
+    ya = ydiff - (1<<10);
+    za = zdiff - (1<<10);
+    xs = xdiff + (1<<10);
+    ys = ydiff + (1<<10);
+    zs = zdiff + (1<<10);
 
     unsigned int xsq, ysq, xopsq, yopsq, zsq, zopsq;
     xsq = xdiff*xdiff;
@@ -255,5 +259,7 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
     maybe_check_cube (xopsq + yopsq + zopsq, xidx + 1, yidx + 1, zidx + 1, xa, ya, za);
     maybe_check_cube (xopsq + ysq + zopsq, xidx + 1, yidx - 1, zidx + 1, xa, ys, za);
 
-    return closest_dist;
+    // Clip value if necessary and promote to 32-bit range
+    closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
+    return closest_dist << 12;
 }

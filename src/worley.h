@@ -11,8 +11,7 @@
    \brief Make worley noise generator.
 
    This function affects the error code setting it to ALL_OK. Returns
-   noise in the range up to [0; 2^17], though with 8-bit resolution
-   only.
+   noise in the range [0; 2^32-1], though with 10-bit resolution only.
 
    \param ndots Number of feature dots in cell of the grid.
    \param width Grid size for X axis is 2^width.
