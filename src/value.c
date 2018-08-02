@@ -28,7 +28,7 @@ struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int widt
         generator = NULL;
     } else {
         vn_errcode = ALL_OK;
-        generator = malloc (sizeof (struct vn_generator));
+        generator = malloc (sizeof (struct vn_value_generator));
         generator->seeds = malloc (sizeof (unsigned int) * octaves);
         generator->width = width;
         generator->height = height;

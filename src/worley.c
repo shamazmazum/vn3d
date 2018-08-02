@@ -14,8 +14,8 @@ static void destroy_generator (struct vn_generator *gen);
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
 static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, unsigned int y, unsigned int z);
 
-struct vn_generator* make_worley_gen (unsigned int ndots, unsigned int width,
-                                    unsigned int height, unsigned int depth)
+struct vn_generator* vn_worley_generator (unsigned int ndots, unsigned int width,
+                                          unsigned int height, unsigned int depth)
 {
     struct vn_worley_generator *generator = malloc (sizeof (struct vn_worley_generator));
     generator->width = width;
