@@ -16,11 +16,11 @@ dimensions. Bigger numbers for initial grid size result in lower frequency for t
 component. If you want 2D noise, please specify `VN_SIZE_UNSPECIFIED` for the last argument. The
 number of octaves specify how many higher frequency details will be mixed into the output. Bigger
 number of octaves result in more detailed noise. As limitation, number of octaves must be less or
-equal to `min (width, height, depth)`. It is a good idea for initial grid size to be close to size
-of resulting texture. E.g. if you want to generate 2D texture with size `1000x1000` it's good to
-call `vn_value_generator()` like so:
+equal to `min (width, height, depth)`. It is a good idea for initial grid size to be close to `n-1`
+or `n-2` where `2^n` is length, width or depth of a texture you want to generate. E.g. if you want
+to generate 2D texture with size `1000x1000` it's good to call `vn_value_generator()` like so:
 ~~~~{.c}
-gen = vn_value_generator (octaves, 10, 10, VN_SIZE_UNSPECIFIED);
+gen = vn_value_generator (octaves, 8, 8, VN_SIZE_UNSPECIFIED);
 ~~~~
 
 Then you call `vn_noise_3d()` or `vn_noise_2d()` in nested loops to generate a texture. The
@@ -33,8 +33,8 @@ Examples:
 ---------
 
 ~~~~{.c}
-// Make a generator with ten octaves and lattice size 1024x1024x1024.
-struct vn_generator *gen = vn_value_generator (5, 10, 10, 10);
+// Make a generator with five octaves and lattice size 256x256x256.
+struct vn_generator *gen = vn_value_generator (5, 8, 8, 8);
 // Get noise value in point (1, 2, 3).
 unsigned int val = vn_noise_3d (gen, 1, 2, 3);
 // Get noise value in point (10, 12) (2d).
@@ -48,8 +48,13 @@ Examples of generated textures (256x256 pixels):
 
 Unfortunately, this section works only with doxygen generated documentation now :-(
 
-![Noise with 3 octaves](octaves3.png)
-![Noise with 8 octaves](octaves8.png)
+|   1   |    2   |   3    |
+|-------|--------|--------|
+![4 octaves, grid size 16x16][img1] | ![2 octaves, grid size 64x64][img2] | ![6 octaves, grid size 64x64][img3]
+
+[img1]: octaves4-16x16.png
+[img2]: octaves2-64x64.png
+[img3]: octaves6-64x64.png
 
 New in version 0.3:
 -------------------
