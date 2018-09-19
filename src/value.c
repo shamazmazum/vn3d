@@ -173,11 +173,14 @@ static unsigned int noise_3d (const struct vn_generator *gen,
 
     int i;
     unsigned long res = 0;
+    int shift = generator->octaves - 1;
 
-    for (i=0; i<generator->octaves; i++)
-        res += value_noise_one_pass_3d (generator, x, y, z, i);
+    for (i=0; i<generator->octaves; i++) {
+        res += (long)(value_noise_one_pass_3d (generator, x, y, z, i)) << shift;
+        shift--;
+    }
 
-    return res / generator->octaves;
+    return res / ((1<<generator->octaves) - 1);
 }
 
 static unsigned int value_noise_one_pass_2d (const struct vn_value_generator *generator,
@@ -231,9 +234,12 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
 
     int i;
     unsigned long res = 0;
+    int shift = generator->octaves - 1;
 
-    for (i=0; i<generator->octaves; i++)
-        res += value_noise_one_pass_2d (generator, x, y, i);
+    for (i=0; i<generator->octaves; i++) {
+        res += (long)(value_noise_one_pass_2d (generator, x, y, i)) << shift;
+        shift--;
+    }
 
-    return res / generator->octaves;
+    return res / ((1<<generator->octaves) - 1);
 }
