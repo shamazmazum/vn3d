@@ -88,13 +88,9 @@ static unsigned int lolrand (unsigned int x, unsigned int y, unsigned int z, uns
 {
     unsigned int r1, r2, r3, r;
 
-    r1 = x ^ (x >> 1);
-    r2 = y ^ (y >> 1);
-    r3 = z ^ (z >> 1);
-
-    r1 *= 0x1B873593;
-    r2 *= 0x19088711;
-    r3 *= 0xB2D05E13;
+    r1 = x * 0x1B873593;
+    r2 = y * 0x19088711;
+    r3 = z * 0xB2D05E13;
 
     r = seed + r1 + r2 + r3;
     r ^= r >> 5;
