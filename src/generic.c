@@ -8,7 +8,6 @@ const struct error_mapping {
     const char *errmsg;
 } error_mappings[] = {
     {ALL_OK, "No errors occured"},
-    {TOO_MANY_OCTAVES, "Number of octaves must be equal or less than min (depth, width, height)"},
     {0, NULL}
 };
 
@@ -32,6 +31,11 @@ const char* vn_get_error_msg ()
 void vn_destroy_generator (struct vn_generator *generator)
 {
     generator->destroy_generator (generator);
+}
+
+unsigned int vn_noise_1d (const struct vn_generator *generator, unsigned int x)
+{
+    return generator->noise_1d (generator, x);
 }
 
 unsigned int vn_noise_2d (const struct vn_generator *generator, unsigned int x, unsigned int y)

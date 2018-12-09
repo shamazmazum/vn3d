@@ -28,11 +28,15 @@ unsigned int vn_noise_3d (const struct vn_generator *generator, unsigned int x,
 unsigned int vn_noise_2d (const struct vn_generator *generator, unsigned int x, unsigned int y);
 
 /**
+   \brief Get a noise value at the point `(x)`.
+**/
+unsigned int vn_noise_1d (const struct vn_generator *generator, unsigned int x);
+
+/**
    \brief Error codes.
 **/
 enum vn_errcode {
     ALL_OK, /**< No error. **/
-    TOO_MANY_OCTAVES /**< Number of octaves is too big. */
 };
 
 /**

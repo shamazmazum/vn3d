@@ -11,21 +11,21 @@ number of octaves and initial grid size. In the following example the grid size 
 struct vn_generator *gen = vn_value_generator (5, 10, 10, 10);
 ~~~~
 
-The initial grid size determines the lowest frequency in the output noise in three
-dimensions. Bigger numbers for initial grid size result in lower frequency for the lowest frequency
-component. If you want 2D noise, please specify `VN_SIZE_UNSPECIFIED` for the last argument. The
-number of octaves specify how many higher frequency details will be mixed into the output. Bigger
-number of octaves result in more detailed noise. As limitation, number of octaves must be less or
-equal to `min (width, height, depth)`. It is a good idea for initial grid size to be close to `n-1`
-or `n-2` where `2^n` is length, width or depth of a texture you want to generate. E.g. if you want
-to generate 2D texture with size `1000x1000` it's good to call `vn_value_generator()` like so:
+The initial grid size determines the lowest frequency in the output noise. Bigger numbers for
+initial grid size result in lower frequency for the lowest frequency component. If you want 1D/2D
+noise, specify any value (e.g. 0) for one or two last arguments. The number of octaves specify
+how many higher frequency details will be mixed into the output. Bigger number of octaves result in
+more detailed noise. As a limitation, grid size values cannot be less than number of octaves. It is a
+good idea for initial grid size to be close to `n-1` or `n-2` where `2^n` is length, width or depth
+of a texture you want to generate. E.g. if you want to generate 2D texture with size `1000x1000`
+it's good to call `vn_value_generator()` like so:
 ~~~~{.c}
-gen = vn_value_generator (octaves, 8, 8, VN_SIZE_UNSPECIFIED);
+gen = vn_value_generator (octaves, 8, 8, 0);
 ~~~~
 
-Then you call `vn_noise_3d()` or `vn_noise_2d()` in nested loops to generate a texture. The
-generator `gen` is not modified during these calls, so loops can be parallelized, provided the
-output of each iteration goes through different cache lines.
+Then you call `vn_noise_3d()`, `vn_noise_2d()` or `vn_noise_1d()` in nested loops to generate a
+texture. The generator `gen` is not modified during these calls, so loops can be parallelized,
+provided the output of each iteration goes through different cache lines.
 
 Finally, generator must be destroyed with `vn_destroy_generator()`.
 
@@ -59,3 +59,8 @@ Unfortunately, this section works only with doxygen generated documentation now 
 New in version 0.3:
 -------------------
 Worley noise was added and API wad changed a bit. See `vn_worley_generator()`.
+
+New in version 0.4:
+-------------------
+1D value noise.
+Value noise generator constructor always succeeds.

@@ -16,8 +16,7 @@
    \param ndots Number of feature dots in cell of the grid.
    \param width Grid size for X axis is 2^width.
    \param height Grid size for Y axis is 2^height.
-   \param depth Grid size for Z axis is 2^depth. Pass any value
-          (e.g. `VN_SIZE_UNSPECIFIED`) for 2D noise.
+   \param depth Grid size for Z axis is 2^depth.
    \return Created generator.
 **/
 struct vn_generator* vn_worley_generator (unsigned int ndots, unsigned int width,

@@ -14,6 +14,7 @@ static void destroy_generator (struct vn_generator *gen);
 static unsigned int noise_3d (const struct vn_generator *gen,
                               unsigned int x, unsigned int y, unsigned int z);
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
+static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
 
 struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int width,
                                          unsigned int height, unsigned int depth)
@@ -21,27 +22,25 @@ struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int widt
     struct vn_value_generator *generator;
 
     /* Sanity checks */
-    if (octaves > width ||
-        octaves > height ||
-        octaves > depth) {
-        vn_errcode = TOO_MANY_OCTAVES;
-        generator = NULL;
-    } else {
-        vn_errcode = ALL_OK;
-        generator = malloc (sizeof (struct vn_value_generator));
-        generator->seeds = malloc (sizeof (unsigned int) * octaves);
-        generator->width = width;
-        generator->height = height;
-        generator->depth = depth;
-        generator->octaves = octaves;
-        generator->destroy_generator = destroy_generator;
-        generator->noise_2d = noise_2d;
-        generator->noise_3d = noise_3d;
+    width = (octaves > width)? octaves: width;
+    height = (octaves > height)? octaves: height;
+    depth = (octaves > depth)? octaves: depth;
 
-        int i;
-        for (i=0; i<octaves; i++)
-            generator->seeds[i] = rand();
-    }
+    vn_errcode = ALL_OK;
+    generator = malloc (sizeof (struct vn_value_generator));
+    generator->seeds = malloc (sizeof (unsigned int) * octaves);
+    generator->width = width;
+    generator->height = height;
+    generator->depth = depth;
+    generator->octaves = octaves;
+    generator->destroy_generator = destroy_generator;
+    generator->noise_1d = noise_1d;
+    generator->noise_2d = noise_2d;
+    generator->noise_3d = noise_3d;
+
+    int i;
+    for (i=0; i<octaves; i++)
+        generator->seeds[i] = rand();
 
     return (struct vn_generator*)generator;
 }
@@ -234,6 +233,51 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
 
     for (i=0; i<generator->octaves; i++) {
         res += (long)(value_noise_one_pass_2d (generator, x, y, i)) << shift;
+        shift--;
+    }
+
+    return res / ((1<<generator->octaves) - 1);
+}
+
+static unsigned int value_noise_one_pass_1d (const struct vn_value_generator *generator,
+                                             unsigned int x, unsigned int pass)
+{
+    unsigned int v0, v1, v;
+
+    unsigned int diffx, intx;
+
+    unsigned int xshift = generator->width - pass;
+    unsigned int xmask = (1<<xshift) - 1;
+    unsigned int xidx = x >> xshift;
+
+    unsigned int seed = generator->seeds[pass];
+
+    /*
+     * Again, clang optimizes these calls to lolrand a lot. For example, the
+     * last multiplication 0xB2D05E13 is eliminated.
+     */
+
+    v0 = lolrand (xidx,   0,   0, seed);
+    v1 = lolrand (xidx+1, 0,   0, seed);
+
+    diffx = x & xmask;
+    intx = intfn (diffx, xshift);
+
+    v = interpolate (v0, v1, intx);
+
+    return v;
+}
+
+static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x)
+{
+    const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
+
+    int i;
+    unsigned long res = 0;
+    int shift = generator->octaves - 1;
+
+    for (i=0; i<generator->octaves; i++) {
+        res += (long)(value_noise_one_pass_1d (generator, x, i)) << shift;
         shift--;
     }
 

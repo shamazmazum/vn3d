@@ -4,6 +4,7 @@ VN3D_@vn3d_VERSION@ {
             vn_destroy_generator;
             vn_noise_3d;
             vn_noise_2d;
+            vn_noise_1d;
 
             vn_get_error;
             vn_get_error_msg;

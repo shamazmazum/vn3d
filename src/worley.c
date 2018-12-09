@@ -13,6 +13,7 @@ struct vn_worley_generator {
 #define WORLEY_MAX ((1<<20) - 1)
 
 static void destroy_generator (struct vn_generator *gen);
+static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
 static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, unsigned int y, unsigned int z);
 
@@ -26,6 +27,7 @@ struct vn_generator* vn_worley_generator (unsigned int ndots, unsigned int width
     generator->ndots = ndots;
     generator->seed = rand();
     generator->destroy_generator = destroy_generator;
+    generator->noise_1d = noise_1d;
     generator->noise_2d = noise_2d;
     generator->noise_3d = noise_3d;
     vn_errcode = ALL_OK;
@@ -262,4 +264,10 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
     // Clip value if necessary and promote to 32-bit range
     closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
     return closest_dist << 12;
+}
+
+static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x)
+{
+    // FIXME: This is of no interest and returns 0;
+    return 0;
 }
