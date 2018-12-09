@@ -12,9 +12,10 @@
 /**
    \brief Make a value noise generator.
 
-   Affects the error code. Returned noise is in the range [0; 2^32-1].
-   All grid sizes are converted to max (\p octaves, grid_size),
-   i.e. grid size cannot be less than number of octaves.
+   Affects the error code setting it to ALL_OK. Returned noise is in
+   the range [0; 2^32-1]. All grid sizes are converted to max (\p
+   octaves, grid_size), i.e. grid size cannot be less than number of
+   octaves.
 
    \param octaves Number of high frequency components in the output. Must be <= min
           (width, height, depth).
