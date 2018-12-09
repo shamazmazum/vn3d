@@ -1,4 +1,4 @@
-VN3D_@vn3d_VERSION@ {
+VN3D_@PROJECT_VERSION@ {
     global: vn_value_generator;
             vn_worley_generator;
             vn_destroy_generator;
