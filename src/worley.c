@@ -5,7 +5,7 @@
 
 struct vn_worley_generator {
     VN_GENERATOR_METHODS
-    unsigned int ndots;
+    unsigned int dots_mask;
     unsigned int seed;
     unsigned int width, height, depth;
 };
@@ -17,14 +17,14 @@ static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
 static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, unsigned int y, unsigned int z);
 
-struct vn_generator* vn_worley_generator (unsigned int ndots, unsigned int width,
+struct vn_generator* vn_worley_generator (unsigned int dots, unsigned int width,
                                           unsigned int height, unsigned int depth)
 {
     struct vn_worley_generator *generator = malloc (sizeof (struct vn_worley_generator));
     generator->width = width;
     generator->height = height;
     generator->depth = depth;
-    generator->ndots = ndots;
+    generator->dots_mask = (1<<dots) - 1;
     generator->seed = rand();
     generator->destroy_generator = destroy_generator;
     generator->noise_1d = noise_1d;
@@ -72,7 +72,7 @@ static unsigned int check_square (const struct vn_worley_generator *generator,
                            int dx, int dy)
 {
     unsigned int rnd = lolrand (sx, sy, 0, generator->seed);
-    unsigned int ndots = generator->ndots;
+    unsigned int ndots = (rnd >> 15) & generator->dots_mask + 1;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
@@ -155,7 +155,7 @@ static unsigned int check_cube (const struct vn_worley_generator *generator,
                                 int dx, int dy, int dz)
 {
     unsigned int rnd = lolrand (sx, sy, sz, generator->seed);
-    unsigned int ndots = generator->ndots;
+    unsigned int ndots = (rnd >> 15) & generator->dots_mask + 1;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
