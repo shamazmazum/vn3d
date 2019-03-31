@@ -4,23 +4,22 @@ VN3D
 **VN3D** is a simple C library for generating 2D/3D smooth value noise in range [0, 2^32-1]. It uses
 integer math only and can be well parallelized.
 
-To use it you must create a generator with call to `vn_value_generator()`. It accepts four arguments:
-number of octaves and initial grid size. In the following example the grid size is `2^10 x 2^10 x
-2^10` and the number of octaves is `5`:
+To use it you must create a generator with call to `vn_value_generator()`. It accepts two arguments:
+number of octaves and initial grid size. In the following example the uniform `2^10 x 2^10 x 2^10`
+grid is created and the number of octaves is `5`:
 ~~~~{.c}
 struct vn_generator *gen = vn_value_generator (5, 10, 10, 10);
 ~~~~
 
-The initial grid size determines the lowest frequency in the output noise. Bigger numbers for
-initial grid size result in lower frequency for the lowest frequency component. If you want 1D/2D
-noise, specify any value (e.g. 0) for one or two last arguments. The number of octaves specify
-how many higher frequency details will be mixed into the output. Bigger number of octaves result in
-more detailed noise. As a limitation, grid size values cannot be less than number of octaves. It is a
-good idea for initial grid size to be close to `n-1` or `n-2` where `2^n` is length, width or depth
-of a texture you want to generate. E.g. if you want to generate 2D texture with size `1000x1000`
-it's good to call `vn_value_generator()` like so:
+The initial grid size determines the lowest frequency in the output noise. Bigger number for
+initial grid size results in lower frequency for the lowest frequency component. The number of
+octaves determines how many higher frequency details will be mixed into the output. Bigger number of
+octaves results in more detailed noise. As a limitation, grid size values cannot be less than number
+of octaves. It is a good idea for initial grid size to be close to `n-1` or `n-2` where `2^n` is
+length, width or depth of a texture you want to generate. E.g. if you want to generate 2D texture
+with size `1000x1000` it's good to call `vn_value_generator()` like so:
 ~~~~{.c}
-gen = vn_value_generator (octaves, 8, 8, 0);
+gen = vn_value_generator (octaves, 8);
 ~~~~
 
 Then you call `vn_noise_3d()`, `vn_noise_2d()` or `vn_noise_1d()` in nested loops to generate a
@@ -34,7 +33,7 @@ Examples:
 
 ~~~~{.c}
 // Make a generator with five octaves and lattice size 256x256x256.
-struct vn_generator *gen = vn_value_generator (5, 8, 8, 8);
+struct vn_generator *gen = vn_value_generator (5, 8);
 // Get noise value in point (1, 2, 3).
 unsigned int val = vn_noise_3d (gen, 1, 2, 3);
 // Get noise value in point (10, 12) (2d).

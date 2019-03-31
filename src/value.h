@@ -12,19 +12,17 @@
 /**
    \brief Make a value noise generator.
 
-   Affects the error code setting it to ALL_OK. Returned noise is in
-   the range [0; 2^32-1]. All grid sizes are converted to max (\p
-   octaves, grid_size), i.e. grid size cannot be less than number of
+   Affects the error code setting it to `ALL_OK`. Returned noise is in
+   the range `[0; 2^32)`. Grid size is converted to `max (octaves,
+   grid_pow)`, i.e. grid size power cannot be less than number of
    octaves.
 
-   \param octaves Number of high frequency components in the output. Must be <= min
-          (width, height, depth).
-   \param width Initial grid size for X axis is 2^width.
-   \param height Initial grid size for Y axis is 2^height.
-   \param depth Initial grid size for Z axis is 2^depth.
+   \param octaves Number of high frequency components in the
+          output.
+   \param grid_pow Initial grid size is `2^grid_pow`. Actual grid_pow is
+          `max (octaves, grid_pow)`.
    \return Created generator.
 **/
-struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int width,
-                                         unsigned int height, unsigned int depth);
+struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int grid_pow);
 
 #endif

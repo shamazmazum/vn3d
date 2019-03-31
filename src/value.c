@@ -6,8 +6,8 @@
 struct vn_value_generator {
     VN_GENERATOR_METHODS
     unsigned int *seeds;
-    unsigned int width, height, depth;
     unsigned int octaves;
+    unsigned int grid_pow;
 };
 
 static void destroy_generator (struct vn_generator *gen);
@@ -16,22 +16,17 @@ static unsigned int noise_3d (const struct vn_generator *gen,
 static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, unsigned int y);
 static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
 
-struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int width,
-                                         unsigned int height, unsigned int depth)
+struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int grid_pow)
 {
     struct vn_value_generator *generator;
 
     /* Sanity checks */
-    width = (octaves > width)? octaves: width;
-    height = (octaves > height)? octaves: height;
-    depth = (octaves > depth)? octaves: depth;
+    grid_pow = (octaves > grid_pow)? octaves: grid_pow;
 
     vn_errcode = ALL_OK;
     generator = malloc (sizeof (struct vn_value_generator));
     generator->seeds = malloc (sizeof (unsigned int) * octaves);
-    generator->width = width;
-    generator->height = height;
-    generator->depth = depth;
+    generator->grid_pow = grid_pow;
     generator->octaves = octaves;
     generator->destroy_generator = destroy_generator;
     generator->noise_1d = noise_1d;
@@ -110,17 +105,12 @@ static unsigned int value_noise_one_pass_3d (const struct vn_value_generator *ge
     unsigned int diffx, diffy, diffz;
     unsigned int intx, inty, intz;
 
-    unsigned int xshift = generator->width - pass;
-    unsigned int yshift = generator->height - pass;
-    unsigned int zshift = generator->depth - pass;
+    unsigned int shift = generator->grid_pow - pass;
+    unsigned int mask = (1<<shift) - 1;
 
-    unsigned int xmask = (1<<xshift) - 1;
-    unsigned int ymask = (1<<yshift) - 1;
-    unsigned int zmask = (1<<zshift) - 1;
-
-    unsigned int xidx = x >> xshift;
-    unsigned int yidx = y >> yshift;
-    unsigned int zidx = z >> zshift;
+    unsigned int xidx = x >> shift;
+    unsigned int yidx = y >> shift;
+    unsigned int zidx = z >> shift;
 
     unsigned int seed = generator->seeds[pass];
 
@@ -140,13 +130,13 @@ static unsigned int value_noise_one_pass_3d (const struct vn_value_generator *ge
     v110 = lolrand (xidx,   yidx+1, zidx+1, seed);
     v111 = lolrand (xidx+1, yidx+1, zidx+1, seed);
 
-    diffx = x & xmask;
-    diffy = y & ymask;
-    diffz = z & zmask;
+    diffx = x & mask;
+    diffy = y & mask;
+    diffz = z & mask;
 
-    intx = intfn (diffx, xshift);
-    inty = intfn (diffy, yshift);
-    intz = intfn (diffz, zshift);
+    intx = intfn (diffx, shift);
+    inty = intfn (diffy, shift);
+    intz = intfn (diffz, shift);
 
     v00 = interpolate (v000, v001, intx);
     v01 = interpolate (v010, v011, intx);
@@ -188,14 +178,11 @@ static unsigned int value_noise_one_pass_2d (const struct vn_value_generator *ge
     unsigned int diffx, diffy;
     unsigned int intx, inty;
 
-    unsigned int xshift = generator->width - pass;
-    unsigned int yshift = generator->height - pass;
+    unsigned int shift = generator->grid_pow - pass;
+    unsigned int mask = (1<<shift) - 1;
 
-    unsigned int xmask = (1<<xshift) - 1;
-    unsigned int ymask = (1<<yshift) - 1;
-
-    unsigned int xidx = x >> xshift;
-    unsigned int yidx = y >> yshift;
+    unsigned int xidx = x >> shift;
+    unsigned int yidx = y >> shift;
 
     unsigned int seed = generator->seeds[pass];
 
@@ -209,11 +196,11 @@ static unsigned int value_noise_one_pass_2d (const struct vn_value_generator *ge
     v10 = lolrand (xidx,   yidx+1, 0, seed);
     v11 = lolrand (xidx+1, yidx+1, 0, seed);
 
-    diffx = x & xmask;
-    diffy = y & ymask;
+    diffx = x & mask;
+    diffy = y & mask;
 
-    intx = intfn (diffx, xshift);
-    inty = intfn (diffy, yshift);
+    intx = intfn (diffx, shift);
+    inty = intfn (diffy, shift);
 
     v0 = interpolate (v00, v01, intx);
     v1 = interpolate (v10, v11, intx);
@@ -246,9 +233,9 @@ static unsigned int value_noise_one_pass_1d (const struct vn_value_generator *ge
 
     unsigned int diffx, intx;
 
-    unsigned int xshift = generator->width - pass;
-    unsigned int xmask = (1<<xshift) - 1;
-    unsigned int xidx = x >> xshift;
+    unsigned int shift = generator->grid_pow - pass;
+    unsigned int mask = (1<<shift) - 1;
+    unsigned int xidx = x >> shift;
 
     unsigned int seed = generator->seeds[pass];
 
@@ -260,8 +247,8 @@ static unsigned int value_noise_one_pass_1d (const struct vn_value_generator *ge
     v0 = lolrand (xidx,   0,   0, seed);
     v1 = lolrand (xidx+1, 0,   0, seed);
 
-    diffx = x & xmask;
-    intx = intfn (diffx, xshift);
+    diffx = x & mask;
+    intx = intfn (diffx, shift);
 
     v = interpolate (v0, v1, intx);
 
