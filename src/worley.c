@@ -69,7 +69,7 @@ static unsigned int check_square (const struct vn_worley_generator *generator,
                            int dx, int dy)
 {
     unsigned int rnd = lolrand (sx, sy, 0, generator->seed);
-    unsigned int ndots = (rnd >> 15) & generator->dots_mask + 1;
+    unsigned int ndots = ((rnd >> 15) & generator->dots_mask) + 1;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
@@ -149,7 +149,7 @@ static unsigned int check_cube (const struct vn_worley_generator *generator,
                                 int dx, int dy, int dz)
 {
     unsigned int rnd = lolrand (sx, sy, sz, generator->seed);
-    unsigned int ndots = (rnd >> 15) & generator->dots_mask + 1;
+    unsigned int ndots = ((rnd >> 15) & generator->dots_mask) + 1;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
