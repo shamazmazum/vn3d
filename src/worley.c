@@ -2,6 +2,7 @@
 #include <limits.h>
 #include "worley.h"
 #include "private.h"
+#include "dtrace.h"
 
 struct vn_worley_generator {
     VN_GENERATOR_METHODS
@@ -141,6 +142,7 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
 
     // Clip value if necessary and promote to 32-bit range
     closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
+    if (closest_dist == WORLEY_MAX) WORLEYNOISE_OVERFLOWED();
     return closest_dist << 12;
 }
 
@@ -252,6 +254,7 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
 
     // Clip value if necessary and promote to 32-bit range
     closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
+    if (closest_dist == WORLEY_MAX) WORLEYNOISE_OVERFLOWED();
     return closest_dist << 12;
 }
 

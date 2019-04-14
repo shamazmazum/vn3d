@@ -4,6 +4,18 @@ endif (LINEAR_INTERPOLATION)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/vn3d.ld.in ${CMAKE_CURRENT_BINARY_DIR}/vn3d.ld)
 add_library (vn3d SHARED generic.c value.c worley.c)
+
+if (DTRACE_FOUND)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dtrace.d
+    ${CMAKE_CURRENT_BINARY_DIR}/dtrace.d COPYONLY)
+  set (DTRACE_SOURCES CMakeFiles/vn3d.dir/*.o)
+  add_custom_command (TARGET vn3d PRE_LINK
+    COMMAND rm -f dtrace.o
+    COMMAND ${DTRACE_EXECUTABLE} -G -s dtrace.d ${DTRACE_SOURCES}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set (ADDITIONAL_LINK_FLAGS "${CMAKE_CURRENT_BINARY_DIR}/dtrace.o")
+endif (DTRACE_FOUND)
+
 set_target_properties (vn3d PROPERTIES VERSION ${PROJECT_VERSION}
   SOVERSION ${PROJECT_VERSION_MAJOR}
   LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/vn3d.ld
