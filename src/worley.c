@@ -9,9 +9,24 @@ struct vn_worley_generator {
     unsigned int dots_mask;
     unsigned int seed;
     unsigned int grid_pow;
+    unsigned int scale_2d, scale_3d;
 };
 
-#define WORLEY_MAX ((1<<20) - 1)
+const float max_2d[] = {
+    1.1, // 1
+    1.0, // 2
+    0.95, // 4
+    0.8, // 8
+    0.45, // 16
+};
+
+const float max_3d[] = {
+    1.15, // 1
+    1.0, // 2
+    0.8, // 4
+    0.64, // 8
+    0.5, // 16
+};
 
 static void destroy_generator (struct vn_generator *gen);
 static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
@@ -22,12 +37,18 @@ struct vn_generator* vn_worley_generator (unsigned int dots, unsigned int grid_p
 {
     struct vn_worley_generator *generator = malloc (sizeof (struct vn_worley_generator));
     generator->grid_pow = grid_pow;
-    generator->dots_mask = (1<<dots) - 1;
     generator->seed = rand();
     generator->destroy_generator = destroy_generator;
     generator->noise_1d = noise_1d;
     generator->noise_2d = noise_2d;
     generator->noise_3d = noise_3d;
+
+    dots = (dots <= 4)? dots: 4;
+    unsigned int squared = 1 << (grid_pow << 1);
+    generator->scale_2d = (float)UINT_MAX / ((float)squared * max_2d[dots]);
+    generator->scale_3d = (float)UINT_MAX / ((float)squared * max_3d[dots]);
+    generator->dots_mask = (1 << dots) - 1;
+
     vn_errcode = ALL_OK;
 
     return (struct vn_generator*)generator;
@@ -71,14 +92,16 @@ static unsigned int check_square (const struct vn_worley_generator *generator,
 {
     unsigned int rnd = lolrand (sx, sy, 0, generator->seed);
     unsigned int ndots = ((rnd >> 15) & generator->dots_mask) + 1;
+    unsigned int grid_pow = generator->grid_pow;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
     for (i=0; i<ndots; i++) {
-        // Get 8-bit fixed point dot coordinates
         rnd = xorshift32 (rnd);
-        unsigned int dotx = rnd & 0x3ff;
-        unsigned int doty = (rnd >> 10) & 0x3ff;
+        unsigned int dotx = rnd & 0xffff;
+        unsigned int doty = (rnd >> 16) & 0xffff;
+        dotx <<= grid_pow; dotx >>= 16;
+        doty <<= grid_pow; doty >>= 16;
         int x = dotx - dx;
         int y = doty - dy;
         unsigned int dist = x*x + y*y;
@@ -101,27 +124,22 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
     struct vn_worley_generator *generator = (struct vn_worley_generator*) gen;
 
     unsigned int grid_pow = generator->grid_pow;
-    unsigned int mask = (1 << grid_pow) - 1;
+    unsigned int next_cell = 1 << grid_pow;
+    unsigned int mask = next_cell - 1;
 
     unsigned int xidx = x >> grid_pow;
     unsigned int yidx = y >> grid_pow;
 
-    // Translate x,y local coordinates to 8-bit fixed point
     unsigned int xdiff = x & mask;
-    xdiff <<= 10;
-    xdiff >>= grid_pow;
-
     unsigned int ydiff = y & mask;
-    ydiff <<= 10;
-    ydiff >>= grid_pow;
 
     unsigned int closest_dist = check_square (generator, xidx, yidx, xdiff, ydiff);
 
     int xa, xs, ya, ys;
-    xa = xdiff - (1<<10);
-    ya = ydiff - (1<<10);
-    xs = xdiff + (1<<10);
-    ys = ydiff + (1<<10);
+    xa = xdiff - next_cell;
+    ya = ydiff - next_cell;
+    xs = xdiff + next_cell;
+    ys = ydiff + next_cell;
 
     unsigned int xsq, ysq, xopsq, yopsq;
     xsq = xdiff*xdiff;
@@ -141,9 +159,10 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
     maybe_check_square (xopsq + yopsq, xidx + 1, yidx + 1, xa, ya);
 
     // Clip value if necessary and promote to 32-bit range
-    closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
-    if (closest_dist == WORLEY_MAX) WORLEYNOISE_OVERFLOWED();
-    return closest_dist << 12;
+    unsigned long res = (unsigned long)closest_dist * generator->scale_2d;
+    res = (res < UINT_MAX)? res: UINT_MAX;
+    if (res == UINT_MAX) WORLEYNOISE_OVERFLOWED();
+    return res;
 }
 
 static unsigned int check_cube (const struct vn_worley_generator *generator,
@@ -152,6 +171,7 @@ static unsigned int check_cube (const struct vn_worley_generator *generator,
 {
     unsigned int rnd = lolrand (sx, sy, sz, generator->seed);
     unsigned int ndots = ((rnd >> 15) & generator->dots_mask) + 1;
+    unsigned int grid_pow = generator->grid_pow;
     unsigned int i;
 
     unsigned int closest_dist = UINT_MAX;
@@ -161,6 +181,11 @@ static unsigned int check_cube (const struct vn_worley_generator *generator,
         unsigned int dotx = rnd & 0x3ff;
         unsigned int doty = (rnd >> 10) & 0x3ff;
         unsigned int dotz = (rnd >> 20) & 0x3ff;
+
+        dotx <<= grid_pow; dotx >>= 10;
+        doty <<= grid_pow; doty >>= 10;
+        dotz <<= grid_pow; dotz >>= 10;
+
         int x = dotx - dx;
         int y = doty - dy;
         int z = dotz - dz;
@@ -183,34 +208,26 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
     struct vn_worley_generator *generator = (struct vn_worley_generator*)gen;
 
     unsigned int grid_pow = generator->grid_pow;
-    unsigned int mask = (1 << grid_pow) - 1;
+    unsigned int next_cell = 1 << grid_pow;
+    unsigned int mask = next_cell - 1;
 
     unsigned int xidx = x >> grid_pow;
     unsigned int yidx = y >> grid_pow;
     unsigned int zidx = z >> grid_pow;
 
-    // Translate x,y local coordinates to 8-bit fixed point
     unsigned int xdiff = x & mask;
-    xdiff <<= 10;
-    xdiff >>= grid_pow;
-
     unsigned int ydiff = y & mask;
-    ydiff <<= 10;
-    ydiff >>= grid_pow;
-
     unsigned int zdiff = z & mask;
-    zdiff <<= 10;
-    zdiff >>= grid_pow;
 
     unsigned int closest_dist = check_cube (generator, xidx, yidx, zidx, xdiff, ydiff, zdiff);
 
     int xa, xs, ya, ys, za, zs;
-    xa = xdiff - (1<<10);
-    ya = ydiff - (1<<10);
-    za = zdiff - (1<<10);
-    xs = xdiff + (1<<10);
-    ys = ydiff + (1<<10);
-    zs = zdiff + (1<<10);
+    xa = xdiff - next_cell;
+    ya = ydiff - next_cell;
+    za = zdiff - next_cell;
+    xs = xdiff + next_cell;
+    ys = ydiff + next_cell;
+    zs = zdiff + next_cell;
 
     unsigned int xsq, ysq, xopsq, yopsq, zsq, zopsq;
     xsq = xdiff*xdiff;
@@ -253,9 +270,10 @@ static unsigned int noise_3d (const struct vn_generator *gen, unsigned int x, un
     maybe_check_cube (xopsq + ysq + zopsq, xidx + 1, yidx - 1, zidx + 1, xa, ys, za);
 
     // Clip value if necessary and promote to 32-bit range
-    closest_dist = (closest_dist > WORLEY_MAX)? WORLEY_MAX: closest_dist;
-    if (closest_dist == WORLEY_MAX) WORLEYNOISE_OVERFLOWED();
-    return closest_dist << 12;
+    unsigned long res = (unsigned long)closest_dist * generator->scale_3d;
+    res = (res < UINT_MAX)? res: UINT_MAX;
+    if (res == UINT_MAX) WORLEYNOISE_OVERFLOWED();
+    return res;
 }
 
 static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x)
