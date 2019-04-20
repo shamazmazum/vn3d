@@ -8,7 +8,7 @@ To use it you must create a generator with call to `vn_value_generator()`. It ac
 number of octaves and initial grid size. In the following example the uniform `2^10 x 2^10 x 2^10`
 grid is created and the number of octaves is `5`:
 ~~~~{.c}
-struct vn_generator *gen = vn_value_generator (5, 10, 10, 10);
+struct vn_generator *gen = vn_value_generator (5, 10);
 ~~~~
 
 The initial grid size determines the lowest frequency in the output noise. Bigger number for
