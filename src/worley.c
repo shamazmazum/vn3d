@@ -5,6 +5,8 @@
 
 #ifdef WITH_DTRACE
 #include <dtrace.h>
+#else
+#define WORLEYNOISE_OVERFLOWED()
 #endif
 
 struct vn_worley_generator {
