@@ -47,15 +47,13 @@ vn_destroy_generator (gen);
 Examples of generated textures (256x256 pixels):
 -----------------------------------------------
 
-Unfortunately, this section works only with doxygen generated documentation now :-(
-
 |   1   |    2   |   3    |
 |-------|--------|--------|
 ![4 octaves, grid size 16x16][img1] | ![2 octaves, grid size 64x64][img2] | ![6 octaves, grid size 64x64][img3]
 
-[img1]: octaves4-16x16.png
-[img2]: octaves2-64x64.png
-[img3]: octaves6-64x64.png
+[img1]: doc/octaves4-16x16.png
+[img2]: doc/octaves2-64x64.png
+[img3]: doc/octaves6-64x64.png
 
 New in version 0.3:
 -------------------
