@@ -2,7 +2,10 @@
 #include <limits.h>
 #include "worley.h"
 #include "private.h"
-#include "dtrace.h"
+
+#ifdef WITH_DTRACE
+#include <dtrace.h>
+#endif
 
 struct vn_worley_generator {
     VN_GENERATOR_METHODS
