@@ -1,0 +1,16 @@
+language: c
+compiler:
+  - clang
+  - gcc
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install cmake
+
+before_script:
+  - mkdir build && cd build
+  - cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_INSTALL_PREFIX:PATH=$TRAVIS_BUILD_DIR/build/install $TRAVIS_BUILD_DIR
+  
+script:
+  - make
+  - sudo make install
