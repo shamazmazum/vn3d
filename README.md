@@ -1,6 +1,8 @@
 VN3D
 ====
 
+[![Build Status](https://travis-ci.com/shamazmazum/vn3d.svg?branch=master)](https://travis-ci.com/shamazmazum/vn3d)
+
 **VN3D** is a simple C library for generating 2D/3D smooth value noise in range [0, 2^32-1]. It uses
 integer math only and can be well parallelized.
 
