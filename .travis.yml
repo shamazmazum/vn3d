@@ -5,7 +5,7 @@ compiler:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get -y install cmake
+  - sudo apt-get -y install cmake doxygen
 
 before_script:
   - mkdir build && cd build
@@ -13,4 +13,5 @@ before_script:
   
 script:
   - make
+  - make doc
   - sudo make install
