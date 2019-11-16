@@ -44,16 +44,27 @@ unsigned int val = vn_noise_2d (gen, 10, 12);
 vn_destroy_generator (gen);
 ~~~~
 
-Examples of generated textures (256x256 pixels):
+Examples of generated value noise textures (256x256 pixels):
 -----------------------------------------------
 
 |   1   |    2   |   3    |
 |-------|--------|--------|
-![4 octaves, grid size 16x16][img1] | ![2 octaves, grid size 64x64][img2] | ![6 octaves, grid size 64x64][img3]
+![4 octaves, grid size 16x16][img1] | ![3 octaves, grid size 64x64][img2] | ![6 octaves, grid size 64x64][img3]
 
-[img1]: doc/octaves4-16x16.png
-[img2]: doc/octaves2-64x64.png
-[img3]: doc/octaves6-64x64.png
+[img1]: doc/octaves4-16x16.jpg
+[img2]: doc/octaves3-64x64.jpg
+[img3]: doc/octaves6-64x64.jpg
+
+Examples of generated worley noise textures (256x256 pixels):
+------------------------------------------------------------
+
+|   1   |   2  |   3  |
+|-------|------|------|
+![1 dot, grid size 32x32][img4] | ![2 dots, grid size 32x32][img5] | ![1 dot, grid size 64x64][img6]
+
+[img4]: doc/worley1-32x32.jpg
+[img5]: doc/worley2-32x32.jpg
+[img6]: doc/worley1-64x64.jpg
 
 New in version 0.3:
 -------------------
@@ -63,3 +74,9 @@ New in version 0.4:
 -------------------
 1D value noise.
 Value noise generator constructor always succeeds.
+
+New in version 0.5:
+-------------------
+Fixed build on linux.
+Simple example program called **vn3dgen** which generates grayscale
+jpeg noise textures using **jpeg-turbo** library.

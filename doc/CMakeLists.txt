@@ -1,7 +1,7 @@
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 configure_file (${CMAKE_SOURCE_DIR}/README.md ${CMAKE_CURRENT_BINARY_DIR}/README.md COPYONLY)
 
-file (GLOB PICTURES RELATIVE ${CMAKE_SOURCE_DIR}/doc *.png)
+file (GLOB PICTURES RELATIVE ${CMAKE_SOURCE_DIR}/doc *.jpg)
 foreach(PIC ${PICTURES})
   configure_file (${CMAKE_SOURCE_DIR}/doc/${PIC} ${CMAKE_CURRENT_BINARY_DIR}/doc/${PIC} COPYONLY)
 endforeach(PIC)
