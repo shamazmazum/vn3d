@@ -19,6 +19,7 @@ static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x);
 struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int grid_pow)
 {
     struct vn_value_generator *generator;
+    unsigned int i;
 
     /* Sanity checks */
     grid_pow = (octaves > grid_pow)? octaves: grid_pow;
@@ -33,7 +34,6 @@ struct vn_generator* vn_value_generator (unsigned int octaves, unsigned int grid
     generator->noise_2d = noise_2d;
     generator->noise_3d = noise_3d;
 
-    int i;
     for (i=0; i<octaves; i++)
         generator->seeds[i] = rand();
 
@@ -156,8 +156,7 @@ static unsigned int noise_3d (const struct vn_generator *gen,
 {
     const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
 
-    int i;
-    unsigned long res = 0;
+    unsigned long i, res = 0;
     int shift = generator->octaves - 1;
 
     for (i=0; i<generator->octaves; i++) {
@@ -214,8 +213,7 @@ static unsigned int noise_2d (const struct vn_generator *gen, unsigned int x, un
 {
     const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
 
-    int i;
-    unsigned long res = 0;
+    unsigned long i, res = 0;
     int shift = generator->octaves - 1;
 
     for (i=0; i<generator->octaves; i++) {
@@ -259,8 +257,7 @@ static unsigned int noise_1d (const struct vn_generator *gen, unsigned int x)
 {
     const struct vn_value_generator *generator = (struct vn_value_generator*)gen;
 
-    int i;
-    unsigned long res = 0;
+    unsigned long i, res = 0;
     int shift = generator->octaves - 1;
 
     for (i=0; i<generator->octaves; i++) {

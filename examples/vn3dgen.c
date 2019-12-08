@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     struct vn_generator *gen = NULL;
     int i,j,p = 0;
     unsigned char *buffer = NULL;
-    tjhandle tjinstance;
+    tjhandle tjinstance = NULL;
     unsigned char *image = NULL;
     size_t imagesize;
     int fd;
