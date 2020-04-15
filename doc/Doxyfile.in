@@ -791,10 +791,10 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =  @CMAKE_CURRENT_SOURCE_DIR@/../src/vn3d.h
-INPUT                  +=  @CMAKE_CURRENT_SOURCE_DIR@/../src/generic.h
-INPUT                  +=  @CMAKE_CURRENT_SOURCE_DIR@/../src/worley.h
-INPUT                  +=  @CMAKE_CURRENT_SOURCE_DIR@/../src/value.h
+INPUT                  =  @CMAKE_SOURCE_DIR@/src/vn3d.h
+INPUT                  +=  @CMAKE_SOURCE_DIR@/src/generic.h
+INPUT                  +=  @CMAKE_SOURCE_DIR@/src/worley.h
+INPUT                  +=  @CMAKE_SOURCE_DIR@/src/value.h
 INPUT                  += @CMAKE_CURRENT_BINARY_DIR@/README.md
 
 # This tag can be used to specify the character encoding of the source files
