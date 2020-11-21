@@ -1,0 +1,18 @@
+freebsd_instance:
+  image_family: freebsd-13-0-snap
+
+task:
+  env:
+    matrix:
+      - COMPILER: clang10
+      - COMPILER: gcc9
+  install_script:
+    - pkg install -y gcc9 llvm10 cmake doxygen
+  config_script:
+    - mkdir build && cd build
+    - cmake -DCMAKE_BUILD_TYPE=RELEASE -DCMAKE_C_COMPILER=$COMPILER $CIRRUS_WORKING_DIR
+  script:
+    - cd build
+    - make
+    - make doc
+    - make install
