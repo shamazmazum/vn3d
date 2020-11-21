@@ -1,0 +1,28 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test_and_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get install doxygen cmake
+      - name: Configure
+        run: |
+          mkdir $GITHUB_WORKSPACE/build && cd $GITHUB_WORKSPACE/build
+          cmake -DCMAKE_BUILD_TYPE=RELEASE $GITHUB_WORKSPACE
+      - name: Build
+        run: |
+          cd $GITHUB_WORKSPACE/build
+          make
+          make doc
+          sudo make install
+      - name: Deploy to GH pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/doc/html
